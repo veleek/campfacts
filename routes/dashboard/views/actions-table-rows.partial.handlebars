@@ -1,0 +1,8 @@
+{{#each actions}}
+<tr>
+    <th scope="row">{{timestamp}}</th>
+    {{#if ../showTeam}}<td>{{#if meta.team}}{{meta.team}}{{else}}- No team -{{/if}}</td>{{/if}}
+    <td>{{level}}</td>
+    <td>{{{message}}} | {{{json meta}}}</td>
+</tr>
+{{/each}}

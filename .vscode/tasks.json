@@ -1,0 +1,62 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ESLint Everything",
+            "command": "eslint",
+            "type": "shell",
+            "args": [
+                "*.js"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "group": "build",
+            "problemMatcher": "$eslint-stylish"
+        },
+        {
+            "label": "Process Handlebars Templates",
+            "type": "shell",
+            "command": "./Process-Templates.ps1 -Wait -NoTouch",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "Run NGrok",
+            "type": "shell",
+            "command": "./RunNgrok.ps1",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Campfacts",
+            "type": "shell",
+            "command": "nodemon index.js",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "isBackground": true,
+            "problemMatcher": []
+        }
+    ]
+}

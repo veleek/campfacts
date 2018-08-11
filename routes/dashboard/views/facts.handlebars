@@ -1,0 +1,62 @@
+{{#> base title='CampFacts! Fact Checker' section="facts"}}
+    {{#*inline "styles"}}
+        <style>
+
+        </style>
+    {{/inline}}
+
+    {{#*inline "content"}}
+        <div>
+            <div class="form-inline">
+                <div class="form-group">
+                    <input type="number" class="form-control mr-2" style="width: 100px" id="fact-number" placeholder="Fact #" min="0" max="32">
+                    <select class="form-control custom-select mr-2" id="fact-text">
+                        <option selected>Pick a fact...</option>
+                        {{#each facts}}
+                        <option value="{{lookup ../factsLookup @index}}" index="{{@index}}">{{this}}</option>
+                        {{/each}}
+                    </select>
+                    <span class="form-text mr-2">Extracted Letter: </span>
+                    <big class="form-text" id="extracted-letter" style="font-weight: bold">_</big>
+                </div>
+            </form>
+    {{/inline}}
+
+    {{#*inline "scripts"}}
+        <script>
+            $(document).ready(function()
+            {
+                var updateExtractedLetter = function()
+                {
+                    var factNumber = $("#fact-number").val() || 0;
+                    var factText = $("#fact-text").val();
+
+                    var letter = "INVALID";
+                    if(factText != "Pick a fact..." && factNumber >= 0 && factNumber < factText.length)
+                    {
+                        letter = factText.substr(factNumber, 1);
+                    }
+
+                    console.log(`#: ${factNumber}, Fact: ${factText}, Letter: ${letter}`);
+                    $("#extracted-letter").text(letter);
+                }
+
+                $("#fact-number").on("click input keyup", function(event)
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    updateExtractedLetter();
+                });
+
+                $("#fact-text").on("change", function(event)
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    updateExtractedLetter();
+                });
+            });
+        </script>
+    {{/inline}}
+{{/base}}

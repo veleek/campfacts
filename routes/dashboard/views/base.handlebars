@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>
+            {{#if title}}
+                {{title}}
+            {{else}}
+                CampFacts! Dashboard
+            {{/if}}
+        </title>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
+        <link rel="stylesheet" href="//cdn.materialdesignicons.com/2.3.54/css/materialdesignicons.min.css" media="all" type="text/css" />
+
+        {{#> styles}}{{/styles}}
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+            <a class="navbar-brand" href="/dashboard">CampFacts!™</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    <a class="nav-item nav-link {{#equals section 'dashboard'}}active{{/equals}}" href="/dashboard">Home</a>
+                    <a class="nav-item nav-link {{#equals section 'team'}}active{{/equals}}" href="/dashboard/team">Team Details</a>
+                    <a class="nav-item nav-link {{#equals section 'actions'}}active{{/equals}}" href="/dashboard/actions">Action Log</a>
+                    <a class="nav-item nav-link {{#equals section 'message'}}active{{/equals}}" href="/dashboard/message">Send Message</a>
+                    <a class="nav-item nav-link {{#equals section 'facts'}}active{{/equals}}" href="/dashboard/facts">Fact Checker</a>
+                </div>
+            </div>
+        </nav>
+
+        <div id="content" class="container-fluid mt-3">
+
+            {{#> content}}No content defined!{{/content}}
+
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.runtime.js" integrity="sha256-dIqy4LRyYdutozP+Dvr146n7yj9l/h3LxK0nmNUxqo4=" crossorigin="anonymous"></script>
+        {{#> scripts}}No Scripts Defined!{{/scripts}}
+    </body>
+</html>

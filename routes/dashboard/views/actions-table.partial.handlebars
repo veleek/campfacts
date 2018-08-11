@@ -1,0 +1,20 @@
+<table class="table table-striped table-hover table-sm" id="actions-table" style="min-width: 280px">
+    <thead>
+        <tr>
+            <th scope="col" style="min-width:212px">Date</th>
+            {{#if showTeam}}<th scope="col" style="min-width:200px">Team</th>{{/if}}
+            <th scope="col">Level</th>
+            <th scope="col" style="min-width:500px">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each actions}}
+        <tr>
+            <th scope="row">{{timestamp}}</th>
+            {{#if ../showTeam}}<td>{{#if meta.team}}{{meta.team}}{{else}}- No team -{{/if}}</td>{{/if}}
+            <td>{{level}}</td>
+            <td>{{{message}}} | {{{json meta}}}</td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>

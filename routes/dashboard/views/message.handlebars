@@ -1,0 +1,228 @@
+{{#> base title='CampFacts! Message Sender' section='message'}}
+    {{#*inline "styles"}}
+        <style>
+            .mdi::before {
+                font-size: 24px;
+                line-height: 14px;
+            }
+            .btn .mdi::before {
+                position: relative;
+                top: 4px;
+            }
+            .btn-xs .mdi::before {
+                font-size: 18px;
+                top: 3px;
+            }
+            .btn-sm .mdi::before {
+                font-size: 18px;
+                top: 3px;
+            }
+            .dropdown-menu .mdi {
+                width: 18px;
+            }
+            .dropdown-menu .mdi::before {
+                position: relative;
+                top: 4px;
+                left: -8px;
+            }
+            .nav .mdi::before {
+                position: relative;
+                top: 4px;
+            }
+            .navbar .navbar-toggle .mdi::before {
+                position: relative;
+                top: 4px;
+                color: #FFF;
+            }
+            .breadcrumb .mdi::before {
+                position: relative;
+                top: 4px;
+            }
+            .breadcrumb a:hover {
+                text-decoration: none;
+            }
+            .breadcrumb a:hover span {
+                text-decoration: underline;
+            }
+            .alert .mdi::before {
+                position: relative;
+                top: 4px;
+                margin-right: 2px;
+            }
+            .input-group-addon .mdi::before {
+                position: relative;
+                top: 3px;
+            }
+            .navbar-brand .mdi::before {
+                position: relative;
+                top: 2px;
+                margin-right: 2px;
+            }
+            .list-group-item .mdi::before {
+                position: relative;
+                top: 3px;
+                left: -3px
+            }
+        </style>
+    {{/inline}}
+
+    {{#*inline "content"}}
+        <div class="row">
+            <div class="form-group col-xl-2 col-lg-3 col-md-4">
+                <label for="message-from">From:</label>
+                <input type="text" class="form-control" id="message-from" placeholder="Phone Number" value="+15550001111">
+            </div>
+
+            <div id="swap-numbers" class="mdi mdi-swap-horizontal mt-4"></div>
+
+            <div class="form-group col-xl-2 col-lg-3 col-md-4">
+                <label for="message-to">To:</label>
+                <input type="text" class="form-control" id="message-to" placeholder="Phone Number" value="+14158436744">
+            </div>
+
+            <div class="col-xl-8 col-lg-6 col-md-4">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group col-sm">
+                <label for="message-media">Media URL: <a href="#" id="populate-default-media">Default Image</a></label>
+                <input type="text" class="form-control" id="message-media" placeholder="Url (optional)">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group col-sm">
+                <label for="message-text">Message: <a href="#" id="populate-default-text">Default Text</a></label>
+                <textarea class="form-control" id="message-text" placeholder="Message content"></textarea>
+            </div>
+        </div>
+
+        <button type="button" id="send-message" class="btn btn-primary mt-2">Send</button>
+
+
+        <div id="alertPlaceholder" class="mt-2">
+        </div>
+    {{/inline}}
+
+    {{#*inline "scripts"}}
+        <script>
+            $(document).ready(function()
+            {
+                var showAlert = function(message, level = "alert-danger")
+                {
+                    var alertContent = `<div class="alert ${level}" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        ${message}
+                    </div>`;
+
+                    $("#alertPlaceholder").html(alertContent);
+                }
+
+                var showAlertForAjaxFailure = function(xhr)
+                {
+                    if(xhr.status === 0)
+                    {
+                        message = "Unknown error."
+                    }
+                    else
+                    {
+                        message = `${xhr.statusText} (${xhr.status})`;
+                        if(xhr.responseJSON && xhr.responseJSON.error)
+                        {
+                            message += ": " + xhr.responseJSON.error;
+                        }
+                        else if(xhr.responseText)
+                        {
+                            message += ": " + xhr.responseText;
+                        }
+                    }
+
+                    showAlert(message);
+                }
+
+                $("#swap-numbers").on("click", function(event)
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    var from = $("#message-from").val();
+                    var to =  $("#message-to").val();
+
+                    $("#message-from").val(to);
+                    $("#message-to").val(from);
+                });
+
+                $("#send-message").on("click", function(event)
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    var t = $(this);
+                    var teamName = t.siblings("#teamNameInput").val();
+
+                    var messageData =
+                    {
+                        id: new Date().toISOString(),
+                        from: $("#message-from").val(),
+                        to: $("#message-to").val(),
+                        text: $("#message-text").val(),
+                        mediaUrl: $("#message-media").val()
+                    };
+
+                    if(messageData.from == "+14158436744")
+                    {
+                        $.ajax({
+                            type: "post",
+                            url: `/message/send`,
+                            data: messageData
+                        })
+                            .done(() => { showAlert(`Message "sent"! (Id: ${messageData.id})`, "alert-success") })
+                            .fail(showAlertForAjaxFailure);
+                    }
+                    else
+                    {
+                        // Fake a message from Twilio
+                        var twilioData = {
+                            MessageSid: messageData.id,
+                            To: messageData.to,
+                            From: messageData.from,
+                            Body: messageData.text,
+                        }
+
+                        if(messageData.text) { twilioData.Body = messageData.text }
+                        if(messageData.mediaUrl) 
+                        {
+                            twilioData.NumMedia = 1;
+                            twilioData.MediaUrl0 = messageData.mediaUrl ;
+                        }
+                        
+                        $.ajax({
+                            type: "post",
+                            url: `/message`,
+                            data: twilioData
+                        })
+                            .done(() => { showAlert(`Message "sent"! (Id: ${messageData.id})`, "alert-success") })
+                            .fail(showAlertForAjaxFailure);
+                    }
+                });
+
+                $("#populate-default-media").on("click", function(event){
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    $("#message-media").val("http://cdn3-www.cattime.com/assets/uploads/gallery/25-funny-cat-memes/01_FUNNY-CAT-MEME.jpg");
+                });
+
+                $("#populate-default-text").on("click", function(event){
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    $("#message-text").val("CAMPFACTS!");
+                });
+            });
+        </script>
+    {{/inline}}
+{{/base}}

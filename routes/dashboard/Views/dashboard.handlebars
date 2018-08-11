@@ -1,0 +1,332 @@
+{{#> base title='CampFacts! Dashboard' section="dashboard"}}
+    {{#*inline "styles"}}
+        <style>
+            #team-details {
+                min-height: 500px;
+            }
+
+            .team-state-row {
+                min-width: 205px;
+            }
+
+            .team-state-row .form-control, .create-team-form .form-control, .add-member-form .form-control {
+                display: inline-block;
+                width: auto;
+                vertical-align: middle;
+            }
+        </style>
+    {{/inline}}
+
+    {{#*inline "content"}}
+        <div class="jumbotron mt-2 d-none">
+            <h1>Thank you for subscribing to CampFacts!</h1>
+            <p>Managing CampFacts! team status since 2018.</p>
+        </div>
+
+        <div class="form-inline create-team-form">
+            <input type="text" class="form-control mb-2 mr-2" id="teamNameInput" name="name" placeholder="Team Name">
+            <button type="submit" id="createTeam" class="btn btn-primary mb-2">Create</button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped" id="teamsTable">
+                <thead class="thead-dark">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">State</th>
+                        <th scope="col"><span class="d-none d-lg-block">Members</span></th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each teams}}
+                    <tr data-team-name="{{name}}">
+                        <th scope="row" class="align-middle teamName">{{name}}</th>
+                        <td>
+                            <div class="team-state-row">
+                                <select name="state" class="teamState form-control mr-2">
+                                    {{{stateSelect state}}}
+                                </select>
+                                <button type="submit" class="updateTeamState btn btn-primary">Update</button>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="d-none d-lg-block">
+                                {{#each members}}{{this}} {{/each}}
+                                {{#each inactiveMembers}}<strike>{{this}}</strike> {{/each}}
+                            </span>
+                        </td>
+                        <td>
+                            <button type="submit" class="deleteTeam btn btn-danger">Delete Team</button>
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <div id="alertPlaceholder">
+        </div>
+
+        <ul class="nav nav-tabs" id="team-info-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="actions-tab" data-toggle="tab" href="#actions" role="tab" aria-controls="actions" aria-selected="true">Actions</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="members-tab" data-toggle="tab" href="#members" role="tab" aria-controls="members" aria-selected="false">Members</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="raw-tab" data-toggle="tab" href="#raw" role="tab" aria-controls="raw" aria-selected="false">Raw</a>
+            </li>
+        </ul>
+        <div class="tab-content border border-top-0 p-2 table-responsive" id="team-details">
+        </div>
+    {{/inline}}
+
+    {{#*inline "scripts"}}
+        <script>
+            $(document).ready(function()
+            {
+                var teamDetailsContent = Handlebars.partials["team-details"]({});
+                var teamDetails = $("#team-details")
+                teamDetails.html(teamDetailsContent);
+
+                var showAlert = function(message, level = "danger")
+                {
+                    // Check for existing alert and fade it out if there is
+                    var existingAlert = $("#alertPlaceholder div.alert:first-child");
+                    if(existingAlert.length > 0)
+                    {
+                        setTimeout(function() { existingAlert.fadeOut(500, function() { existingAlert.remove()}); }, 5000);
+                    }
+
+                    var alertContent = `<div class="alert alert-${level} hidden" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        ${message}
+                    </div>`;
+
+                    $("#alertPlaceholder").prepend(alertContent);
+                }
+
+                var showAlertForAjaxFailure = function(xhr)
+                {
+                    if(xhr.status === 0)
+                    {
+                        message = "Unknown error."
+                    }
+                    else
+                    {
+                        message = `${xhr.statusText} (${xhr.status})`;
+                        if(xhr.responseJSON && xhr.responseJSON.error)
+                        {
+                            message += ": " + xhr.responseJSON.error;
+                        }
+                        else if(xhr.responseText)
+                        {
+                            message += ": " + xhr.responseText;
+                        }
+                    }
+
+                    showAlert(message);
+                }
+
+                $("#createTeam").on("click", function(event)
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var t = $(this);
+                    var teamName = t.siblings("#teamNameInput").val();
+
+                    $.ajax({
+                        type: "post",
+                        url: `/Teams/${teamName}?create=true`,
+                    })
+                        .done(() => { location.reload(); })
+                        .fail(showAlertForAjaxFailure);
+                });
+
+                var rows = $("#teamsTable tbody > tr");
+                rows.on("click", ".updateTeamState", function(event)
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var t = $(this);
+                    var newState = t.siblings(".teamState").val();
+                    var teamName = t.parents("tr").data("team-name");
+
+                    $.ajax({
+                        type: "post",
+                        url: `/Teams/${teamName}`,
+                        data: {
+                            state: newState
+                        },
+                        dataType: "json"
+                    })
+                        .done(() => { location.reload(); })
+                        .fail(showAlertForAjaxFailure);
+                });
+
+                rows.on("click", ".deleteTeam", function(event)
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var t = $(this);
+                    var teamName = t.parents("tr").data("team-name");
+
+                    console.log(`Deleting team '${teamName}'.`);
+                    $.ajax({
+                        type: "delete",
+                        url: `/Teams/${teamName}`,
+                    })
+                        .done(() => { location.reload(); })
+                        .fail(showAlertForAjaxFailure);
+                });
+
+                // Occurs when a team row is selected.
+                rows.on("click", function(event)
+                {
+                    event.stopPropagation();
+                    var tr = $(this);
+
+                    if(!tr.hasClass('table-active'))
+                    {
+                        var teamName = tr.data("team-name");
+
+                        $.ajax({
+                            type: "get",
+                            url: `/Teams/${teamName}`,
+                            dataType: "json"
+                        })
+                            .done(team =>
+                            {
+                                var data =
+                                {
+                                    team : team,
+                                    teamJson: JSON.stringify(team, null, 4)
+                                };
+
+                                var teamDetailsContent = Handlebars.partials["team-details"](data);
+                                var teamDetails = $("#team-details")
+                                teamDetails.data("team-members", team.members);
+                                teamDetails.html(teamDetailsContent);
+                                
+                                var visiblePane = $("#team-details .tab-pane.show.active");
+
+                                var selectedTab = $("#team-info-tabs li.nav-item a[aria-selected='true']");
+                                var selectedPaneId = selectedTab.attr("aria-controls");
+
+                                if(visiblePane.attr("id") != selectedPaneId)
+                                {
+                                    var selectedPane = $(`#team-details .tab-pane[id='${selectedPaneId}']`);
+
+                                    visiblePane.removeClass("active show");
+                                    selectedPane.addClass("active show");
+                                }
+                                
+                                //teamDetails[0].scrollIntoView({behavior: "smooth"});
+
+                                // Kick off an update for the actions page
+                                UpdateActions();
+                            })
+                            .fail(showAlertForAjaxFailure);
+
+                        tr.addClass('table-active');
+                        tr.siblings().removeClass('table-active');
+                    }
+                });
+
+                var teamDetails = $("#team-details");
+                teamDetails.on("click", "#refresh-actions", function(event)
+                {
+                    UpdateActions();
+                });
+
+                teamDetails.on("change", "#message-member-select", function(event)
+                {
+                    console.log("Selected " + event.target.value);
+                });
+
+                teamDetails.on("click", "#send-message", function(event)
+                {
+                    var messageRecipient = $("#message-member-select").val();
+                    var messageText = $("#message-text").val();
+                    var messageMediaUrl = $("#message-mediaUrl").val();
+
+                    if(messageRecipient == "*")
+                    {
+                        messageRecipient = $("#team-details").data("team-members");
+                    }
+
+                    $.ajax({
+                            type: "post",
+                            url: `message/send`,
+                            data: JSON.stringify({ to: messageRecipient, text: messageText, mediaUrl: messageMediaUrl }),
+                            contentType: "application/json"
+                        })
+                            .done(() => showAlert(`Successfully sent '${messageText}' to ${messageRecipient}.`, "success"))
+                            .fail(showAlertForAjaxFailure);
+                });
+
+                teamDetails.on("click", ".addMember", function(event)
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var t = $(this);
+                    var member = t.siblings("[name='phoneNumber']").val();
+                    var teamName = $("#teamsTable tbody > tr.table-active").data("team-name");
+
+                    $.ajax({
+                        type: "post",
+                        url: `/Teams/${teamName}?action=addMember&member=${member}`,
+                        dataType: "json"
+                    })
+                        .done(() => { location.reload(); })
+                        .fail(showAlertForAjaxFailure);
+                });
+
+                teamDetails.on("click", ".removeMember", function(event)
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var t = $(this);
+                    var member = t.data("member");
+                    var teamName = $("#teamsTable tbody > tr.table-active").data("team-name");
+
+                    $.ajax({
+                        type: "post",
+                        url: `/Teams/${teamName}?action=removeMember&member=${member}`,
+                        dataType: "json"
+                    })
+                        .done(() => { location.reload(); })
+                        .fail(showAlertForAjaxFailure);
+                });
+
+                function UpdateActions()
+                {
+                    var teamName = $("#teamsTable tbody > tr.table-active").data("team-name")
+
+                    $.ajax({
+                        type: "get",
+                        url: `/logs/${teamName}`,
+                        dataType: "json"
+                    })
+                        .done(actions => {
+                            var data = {
+                                actions: actions
+                            }
+                            var result = Handlebars.partials["actions-table"](data);
+                            $("#actions-table").html(result);
+                        })
+                }
+            });
+
+            Handlebars.registerHelper('json', function(context) {
+                return JSON.stringify(context);
+            });
+            {{{file "./views/_actions-table.js"}}}
+            {{{file "./views/_team-details.js"}}}
+        </script>
+    {{/inline}}
+{{/base}}
